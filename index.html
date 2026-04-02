@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ダツイチ！AI勉強会 総合成果レポート</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js DataLabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8fafc;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f8fafc;
+        }
+        body::-webkit-scrollbar { width: 8px; }
+        body::-webkit-scrollbar-track { background: #f8fafc; }
+        body::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        .gradient-text {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        /* ボタンのアクティブ状態 */
+        .btn-active {
+            background-color: white !important;
+            color: #4f46e5 !important;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+        }
+        .btn-world {
+            background-color: #f3f4f6 !important;
+            color: #8b5cf6 !important;
+            border: 1px solid #ddd6fe;
+        }
+    </style>
+</head>
+<body class="text-slate-800 p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-12">
+        
+        <!-- Header -->
+        <header class="text-center space-y-3 mb-12">
+            <div class="inline-block px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 text-sm font-bold tracking-widest uppercase mb-2">
+                Dattsu-ichi AI Boot Camp Results
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight">
+                <span class="bg-gradient-to-r from-indigo-600 to-pink-500 gradient-text">ダツイチ！AI勉強会</span> 総合成果レポート
+            </h1>
+            <p class="text-slate-500 text-lg md:text-xl max-w-2xl mx-auto">全5回のカリキュラムがもたらした、20名の行動変容と実務実装への軌跡</p>
+        </header>
+
+        <!-- Section 1: スキル進化の軌跡 (World/Before/After Switch) -->
+        <section class="space-y-6">
+            <div class="flex items-center justify-between border-b-2 border-slate-100 pb-3">
+                <div class="flex items-center space-x-3">
+                    <i data-lucide="swords" class="w-8 h-8 text-indigo-500"></i>
+                    <h2 class="text-3xl font-bold text-slate-800">Part 1. スキル進化の軌跡（クラスチェンジ）</h2>
+                </div>
+            </div>
+            
+            <div class="glass-panel rounded-2xl p-6 md:p-8">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    
+                    <!-- 左側: 切り替えスイッチとチャート -->
+                    <div class="lg:col-span-3 flex flex-col">
+                        
+                        <!-- モード切り替えスイッチ -->
+                        <div class="flex justify-center mb-6">
+                            <div class="bg-slate-100 p-1 rounded-xl inline-flex shadow-inner">
+                                <button id="btn-world" onclick="updateEvoChart('world')" class="px-6 py-2 rounded-lg text-sm font-bold text-purple-600 hover:bg-purple-50 transition flex items-center mr-1">
+                                    <i data-lucide="globe" class="w-4 h-4 mr-1"></i> 世界分布推計
+                                </button>
+                                <div class="w-px bg-slate-300 mx-1"></div>
+                                <button id="btn-before" onclick="updateEvoChart('before')" class="px-6 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-slate-700 transition">参加前 (Before)</button>
+                                <button id="btn-after" onclick="updateEvoChart('after')" class="px-6 py-2 rounded-lg text-sm font-bold text-slate-500 hover:text-slate-700 transition">Day5修了後 (After)</button>
+                                <button id="btn-both" onclick="updateEvoChart('both')" class="px-6 py-2 rounded-lg text-sm font-bold btn-active transition">参加者比較 (Both)</button>
+                            </div>
+                        </div>
+
+                        <!-- グラフキャンバス -->
+                        <div class="relative flex-grow h-[500px]">
+                            <canvas id="evolutionChart"></canvas>
+                        </div>
+                        
+                        <div class="mt-6 bg-indigo-50 p-4 rounded-xl" id="insight-box">
+                            <p class="text-sm text-indigo-800 font-medium leading-relaxed" id="insight-text">
+                                <strong>総評:</strong> スタート時は8割が「Lv0 村人」でしたが、勉強会を通じて<strong>6割以上が「Lv3 冒険者（独自Gem作成層）」へ一気にクラスチェンジ</strong>を果たしました。
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 右側: クラス定義 (下から上に Lv0 -> Lv5) -->
+                    <div class="lg:col-span-1 flex flex-col h-[500px] lg:mt-[52px] space-y-2">
+                        
+                        <!-- Lv5 勇者 -->
+                        <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm border-l-4 border-l-rose-500 flex-1 flex flex-col justify-center transition hover:shadow-md">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <div class="bg-rose-50 p-1 rounded text-rose-500"><i data-lucide="cpu" class="w-3.5 h-3.5"></i></div>
+                                <span class="font-black text-slate-800 text-xs">Lv5 勇者</span>
+                            </div>
+                            <p class="text-[10px] text-slate-600 leading-tight">AIモデルそのものの開発やエンジニア、データサイエンティストなどの専門家。</p>
+                        </div>
+
+                        <!-- Lv4 勇者候補 -->
+                        <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm border-l-4 border-l-pink-500 flex-1 flex flex-col justify-center transition hover:shadow-md">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <div class="bg-pink-50 p-1 rounded text-pink-500"><i data-lucide="crown" class="w-3.5 h-3.5"></i></div>
+                                <span class="font-black text-slate-800 text-xs">Lv4 勇者候補</span>
+                            </div>
+                            <p class="text-[10px] text-slate-600 leading-tight">全てのツールを利用＋独自Gem作成＋アプリ開発まで到達した高度な実装層。</p>
+                        </div>
+
+                        <!-- Lv3 冒険者 -->
+                        <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm border-l-4 border-l-purple-500 flex-1 flex flex-col justify-center transition hover:shadow-md">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <div class="bg-purple-50 p-1 rounded text-purple-500"><i data-lucide="swords" class="w-3.5 h-3.5"></i></div>
+                                <span class="font-black text-slate-800 text-xs">Lv3 冒険者</span>
+                            </div>
+                            <p class="text-[10px] text-slate-600 leading-tight">2つ以上のツールを利用し、自業務に合わせた「独自Gem」を作成・活用できる層。</p>
+                        </div>
+
+                        <!-- Lv2 探索者 -->
+                        <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm border-l-4 border-l-teal-500 flex-1 flex flex-col justify-center transition hover:shadow-md">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <div class="bg-teal-50 p-1 rounded text-teal-500"><i data-lucide="compass" class="w-3.5 h-3.5"></i></div>
+                                <span class="font-black text-slate-800 text-xs">Lv2 探索者</span>
+                            </div>
+                            <p class="text-[10px] text-slate-600 leading-tight">複数ツールを利用し、画像・資料・動画などの応用的な活動にAIを組み込んでいる層。</p>
+                        </div>
+
+                        <!-- Lv1 見習い -->
+                        <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm border-l-4 border-l-blue-500 flex-1 flex flex-col justify-center transition hover:shadow-md">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <div class="bg-blue-50 p-1 rounded text-blue-500"><i data-lucide="book" class="w-3.5 h-3.5"></i></div>
+                                <span class="font-black text-slate-800 text-xs">Lv1 見習い</span>
+                            </div>
+                            <p class="text-[10px] text-slate-600 leading-tight">AIチャット以外のツールを2種類以上利用し、ツールの幅を広げている層。</p>
+                        </div>
+
+                        <!-- Lv0 村人 -->
+                        <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-sm border-l-4 border-l-slate-400 flex-1 flex flex-col justify-center transition hover:shadow-md">
+                            <div class="flex items-center space-x-2 mb-1">
+                                <div class="bg-slate-50 p-1 rounded text-slate-500"><i data-lucide="user" class="w-3.5 h-3.5"></i></div>
+                                <span class="font-black text-slate-800 text-xs">Lv0 村人</span>
+                            </div>
+                            <p class="text-[10px] text-slate-600 leading-tight">ChatGPT(AIチャット)利用のみで、主に検索・要約等に限定して使っている層。</p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: 時間的成果とブレイクスルーの瞬間 -->
+        <section class="space-y-6 pt-8">
+            <div class="flex items-center space-x-3 border-b-2 border-slate-100 pb-3">
+                <i data-lucide="zap" class="w-8 h-8 text-pink-500"></i>
+                <h2 class="text-3xl font-bold text-slate-800">Part 2. 実務の効率化とパラダイムシフト</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- 時間削減効果 (Pie Chart) -->
+                <div class="glass-panel rounded-2xl p-6 flex flex-col h-full">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="bg-indigo-50 p-2 rounded-lg text-indigo-600">
+                            <i data-lucide="clock"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-800">週の作業削減時間</h3>
+                            <p class="text-xs text-slate-500">アンケートQ6 集計（20名）</p>
+                        </div>
+                    </div>
+                    
+                    <div class="relative w-full aspect-square max-h-[300px] mx-auto flex-grow flex items-center justify-center">
+                        <canvas id="timeSavedChart"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <span class="text-xs font-medium text-slate-400">平均効果</span>
+                            <span class="text-2xl font-black text-indigo-600">1〜3<span class="text-sm font-bold text-indigo-400">h/週</span></span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 bg-slate-50 rounded-xl p-4 text-xs text-slate-600 border border-slate-100">
+                        <p><strong>インサイト：</strong> 参加者の<strong>85%以上が週1時間以上の業務削減</strong>を実感。学習したAIスキルが実務の生産性に直結していることを示しています。</p>
+                    </div>
+                </div>
+
+                <!-- ブレイクスルーのDay (Bar Chart) -->
+                <div class="glass-panel rounded-2xl p-6 flex flex-col h-full">
+                    <div class="flex items-center space-x-3 mb-6">
+                        <div class="bg-pink-50 p-2 rounded-lg text-pink-600">
+                            <i data-lucide="lightbulb"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-800">ブレイクスルーになった回</h3>
+                            <p class="text-xs text-slate-500">アンケートQ7 集計</p>
+                        </div>
+                    </div>
+                    
+                    <div class="relative w-full h-[250px] md:h-[300px] flex-grow">
+                        <canvas id="breakthroughChart"></canvas>
+                    </div>
+
+                    <div class="mt-6 bg-slate-50 rounded-xl p-4 text-xs text-slate-600 border border-slate-100">
+                        <p><strong>インサイト：</strong> 突出している<strong>「Day4（カスタムGemの作成）」</strong>こそが、参加者を『村人』から『冒険者』へと引き上げる決定的なターニングポイントでした。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        Chart.register(ChartDataLabels);
+        lucide.createIcons();
+
+        let evolutionChart;
+        let isWorldMode = false;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // --- Part 1: Evolution Chart Setup ---
+            const evoCtx = document.getElementById('evolutionChart').getContext('2d');
+            
+            // Gradients
+            const gradBefore = evoCtx.createLinearGradient(0, 0, 500, 0);
+            gradBefore.addColorStop(0, 'rgba(148, 163, 184, 0.4)');
+            gradBefore.addColorStop(1, 'rgba(148, 163, 184, 0.1)');
+
+            const gradAfter = evoCtx.createLinearGradient(0, 500, 0, 0);
+            gradAfter.addColorStop(0, 'rgba(99, 102, 241, 0.4)'); // Indigo
+            gradAfter.addColorStop(0.6, 'rgba(168, 85, 247, 0.6)'); // Purple
+            gradAfter.addColorStop(1, 'rgba(236, 72, 153, 0.8)'); // Pink
+
+            const gradWorld = evoCtx.createLinearGradient(0, 500, 0, 0);
+            gradWorld.addColorStop(0, 'rgba(139, 92, 246, 0.2)'); // Violet
+            gradWorld.addColorStop(1, 'rgba(139, 92, 246, 0.05)');
+
+            // Datasets
+            const datasets = {
+                before: {
+                    label: '参加前 (人数)',
+                    data: [16, 2, 1, 1, 0, 0],
+                    borderColor: 'rgba(148, 163, 184, 1)',
+                    backgroundColor: gradBefore,
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4
+                },
+                after: {
+                    label: 'Day5修了後 (人数)',
+                    data: [1, 2, 3, 12, 2, 0],
+                    borderColor: 'rgba(236, 72, 153, 1)',
+                    backgroundColor: gradAfter,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: 'rgba(236, 72, 153, 1)',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                },
+                world: {
+                    label: '世界人口推計 (%)',
+                    data: [75, 18, 5, 1.5, 0.4, 0.1],
+                    borderColor: 'rgba(139, 92, 246, 1)',
+                    backgroundColor: gradWorld,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: 'rgba(139, 92, 246, 1)',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }
+            };
+
+            // Options for numbers (participants) vs percentages (world)
+            const optionsPeople = {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: {
+                        reverse: true,
+                        beginAtZero: true,
+                        max: 18,
+                        grid: { drawBorder: false },
+                        ticks: { callback: v => v + '名', font: { family: 'system-ui' } },
+                        title: { display: true, text: '該当人数 (全20名)', font: { weight: 'bold' } }
+                    },
+                    y: { position: 'right', reverse: true, grid: { display: false }, ticks: { font: { family: 'system-ui', weight: 'bold' } } }
+                },
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, font: { family: 'system-ui', weight: 'bold' } } },
+                    tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', cornerRadius: 8 },
+                    datalabels: { display: false }
+                }
+            };
+
+            const optionsWorld = {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: {
+                        reverse: true,
+                        beginAtZero: true,
+                        max: 80,
+                        grid: { drawBorder: false },
+                        ticks: { callback: v => v + '%', font: { family: 'system-ui' } },
+                        title: { display: true, text: '世界人口割合 (%)', font: { weight: 'bold' } }
+                    },
+                    y: { position: 'right', reverse: true, grid: { display: false }, ticks: { font: { family: 'system-ui', weight: 'bold' } } }
+                },
+                plugins: {
+                    legend: { position: 'top', labels: { usePointStyle: true, font: { family: 'system-ui', weight: 'bold' } } },
+                    tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', cornerRadius: 8 },
+                    datalabels: { display: false }
+                }
+            };
+
+            evolutionChart = new Chart(evoCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Lv0 村人', 'Lv1 見習い', 'Lv2 探索者', 'Lv3 冒険者', 'Lv4 勇者候補', 'Lv5 勇者'],
+                    datasets: [datasets.before, datasets.after] // Default
+                },
+                options: optionsPeople
+            });
+
+            // Switch Logic
+            window.updateEvoChart = function(mode) {
+                const buttons = ['btn-world', 'btn-before', 'btn-after', 'btn-both'].map(id => document.getElementById(id));
+                buttons.forEach(b => {
+                    b.classList.remove('btn-active', 'btn-world');
+                    b.className = b.className.replace('text-slate-700', 'text-slate-500');
+                });
+
+                const insightBox = document.getElementById('insight-box');
+                const insightText = document.getElementById('insight-text');
+
+                if (mode === 'world') {
+                    evolutionChart.options = optionsWorld;
+                    evolutionChart.data.datasets = [datasets.world];
+                    document.getElementById('btn-world').classList.add('btn-world');
+                    
+                    insightBox.className = "mt-6 bg-purple-50 p-4 rounded-xl";
+                    insightText.className = "text-sm text-purple-800 font-medium leading-relaxed";
+                    insightText.innerHTML = "<strong>世界推計:</strong> インターネットユーザー約53億人のうち、Lv3 冒険者（独自AI構築）以上は<strong>上位1.5%未満の非常に希少な層</strong>であると推計されます。ダツイチ！メンバーは、この圧倒的なマイノリティ領域へ到達しました。";
+                } else {
+                    evolutionChart.options = optionsPeople;
+                    insightBox.className = "mt-6 bg-indigo-50 p-4 rounded-xl";
+                    insightText.className = "text-sm text-indigo-800 font-medium leading-relaxed";
+                    insightText.innerHTML = "<strong>総評:</strong> スタート時は8割が「Lv0 村人」でしたが、勉強会を通じて<strong>6割以上が「Lv3 冒険者（独自Gem作成層）」へ一気にクラスチェンジ</strong>を果たしました。";
+
+                    if (mode === 'before') {
+                        evolutionChart.data.datasets = [datasets.before];
+                        document.getElementById('btn-before').classList.add('btn-active');
+                    } else if (mode === 'after') {
+                        evolutionChart.data.datasets = [datasets.after];
+                        document.getElementById('btn-after').classList.add('btn-active');
+                    } else {
+                        evolutionChart.data.datasets = [datasets.before, datasets.after];
+                        document.getElementById('btn-both').classList.add('btn-active');
+                    }
+                }
+                evolutionChart.update();
+            };
+
+            // --- Part 2: Other Charts Setup ---
+            const timeCtx = document.getElementById('timeSavedChart').getContext('2d');
+            new Chart(timeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['1h未満', '1〜3h', '3〜5h', '5h以上'],
+                    datasets: [{
+                        data: [1, 10, 7, 2],
+                        backgroundColor: ['rgba(148,163,184,0.8)', 'rgba(99,102,241,0.8)', 'rgba(168,85,247,0.8)', 'rgba(236,72,153,0.8)'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 15, font: { family: 'system-ui', size: 11 } } },
+                        datalabels: {
+                            color: '#fff',
+                            font: { family: 'system-ui', weight: 'bold', size: 12 },
+                            formatter: (v, ctx) => {
+                                const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                return Math.round((v / total) * 100) + '%';
+                            }
+                        }
+                    }
+                }
+            });
+
+            const breakCtx = document.getElementById('breakthroughChart').getContext('2d');
+            const barGradient = breakCtx.createLinearGradient(0, 0, 0, 300);
+            barGradient.addColorStop(0, 'rgba(236, 72, 153, 0.8)');
+            barGradient.addColorStop(1, 'rgba(99, 102, 241, 0.5)');
+
+            new Chart(breakCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
+                    datasets: [{
+                        data: [1, 2, 7, 9, 1],
+                        backgroundColor: ['rgba(148,163,184,0.4)', 'rgba(148,163,184,0.6)', 'rgba(168,85,247,0.8)', barGradient, 'rgba(148,163,184,0.4)'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 10, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { stepSize: 2 } },
+                        x: { grid: { display: false }, ticks: { font: { weight: 'bold' } } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        datalabels: { anchor: 'end', align: 'top', color: '#475569', font: { weight: 'bold' }, formatter: v => v > 0 ? v + '名' : '' }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
